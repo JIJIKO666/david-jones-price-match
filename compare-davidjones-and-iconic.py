@@ -295,6 +295,13 @@ def apply_offer_discount(price_plain, price_now, offer_text):
             total = float(m_buy.group(2))
             if qty > 0:
                 price_offer = round(total / qty, 2)
+    elif "GIFT CARD" in offer_text:
+        if price_plain >= 600:
+            price_offer = price_plain-150
+        elif price_plain >= 300:
+            price_offer = price_plain-50
+        elif price_plain >= 150:
+            price_offer = price_plain-20
 
     return price_offer
 
