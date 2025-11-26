@@ -218,29 +218,28 @@ def scrape_iconic(brand="misha-collection", threshold=0):
 
 
 def get_product_info(item):
-    """Extract product information from a David Jones product item."""
-    brand_elem = item.select_one("a.ProductCard_brand__SYBe7")
+    brand_elem = item.select_one("p.ProductCard_brand__SYBe7")
     brand = brand_elem.get_text(strip=True) if brand_elem else ""
-    name_elem = item.select_one("a.ProductCard_name__p_7X2")
+    name_elem = item.select_one("h2.ProductCard_name__p_7X2")
     name = name_elem.get_text(strip=True) if name_elem else ""
     title = f"{brand} {name}".strip()
 
-    link = name_elem.get("href", "").strip() if name_elem else ""
-    link = urljoin("https://www.davidjones.com", link)
-
+    link = item.select_one("div.yotpo-widget-instance")['data-yotpo-url']
+    link = urljoin("https://www.davidjones.com", link)    
+    
     # Extract product ID from link for special offers API
     product_id = None
     id_match = re.search(r'-(\d+)(?:\?|$)', link)
-    product_id = id_match.group(1) if id_match else None
-
+    product_id = id_match.group(1)
+    
     # Price extraction from Price_root__y8UOm
     price_root = item.select_one("div.Price_root__y8UOm")
     price_plain = None
     price_now = None
-
+    
     # Check the accessibility text for price info
     # Pattern: "Price is now $220.00, it was $443.00" or "Price $399.00"
-    accessibility_text = price_root.select_one("span[style*='position:absolute']") if price_root else None
+    accessibility_text = price_root.select_one("span[style*='position:absolute']")
     if accessibility_text:
         text = accessibility_text.get_text(strip=True)
         # Check if it's a sale price
@@ -257,12 +256,12 @@ def get_product_info(item):
             price_match = re.search(r'Price\s+\$([0-9,]+\.?\d*)', text, re.IGNORECASE)
             if price_match:
                 price_plain = float(price_match.group(1).replace(',', ''))
-
+    
     # Determine final price and was price
     candidates = [p for p in (price_plain, price_now) if p is not None]
     price = min(candidates) if candidates else None
     was = max(candidates) if candidates else None
-
+    
     return title, price, was, link, product_id
 
 
@@ -433,6 +432,9 @@ def main():
 
 if __name__ == "__main__":
     main()
-# source venv/bin/activate
-# python3 compare-davidjones-and-iconic.py
-# python3 compare-davidjones-and-iconic.py misha-collection 100
+# pyenv shell 3.12.7
+# python compare-davidjones-and-iconic.py
+# python compare-davidjones-and-iconic.py mens-clothing-sale
+# python compare-davidjones-and-iconic.py kids-sale
+# python compare-davidjones-and-iconic.py sports-sale
+# python compare-davidjones-and-iconic.py misha-collection 100
